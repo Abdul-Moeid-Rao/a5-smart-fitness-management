@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  Boolean   @default(false)
+  image          String?
+  phone          String?
+  bio            String?
+  role           String    @default("user")
+  status         String    @default("active")
+  plan           String    @default("free")
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sessions  Session[]
+  accounts  Account[]
+  articles  Article[]
+  auditLogs AuditLog[]
+  apiKeys   ApiKey[]
+  permissions UserPermission[]
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  expiresAt DateTime
+  token     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Role {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  description String?
+  system      Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  key         String             @unique
+  description String?
+  group       String?
+  createdAt   DateTime           @default(now())
+
+  roles RolePermission[]
+  users UserPermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  assignedAt   DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+  grantedBy    String?
+  grantedAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+}
+
+model Exercise {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  category     String
+  muscleGroup  String
+  difficulty   String   @default("beginner")
+  equipment    String?
+  description  String
+  instructions String
+  imageUrl     String?
+  isPublished  Boolean  @default(true)
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+  @@index([muscleGroup])
+  @@index([isPublished])
+}
+
+model Article {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  excerpt      String?
+  content      String
+  coverImage   String?
+  status       String    @default("draft")
+  tags         String?
+  authorId     String?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String?
+  entityId   String?
+  actorId    String?
+  ipAddress  String?
+  userAgent  String?
+  details    String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  key         String    @unique
+  userId      String
+  permissions String?
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
