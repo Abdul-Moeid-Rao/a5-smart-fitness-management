@@ -114,6 +114,9 @@ Prisma.NullTypes = NullTypes
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -257,9 +260,46 @@ exports.Prisma.ApiKeyScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  age: 'age',
+  heightCm: 'heightCm',
+  weightKg: 'weightKg',
+  goalWeightKg: 'goalWeightKg',
+  activityLevel: 'activityLevel',
+  fitnessGoal: 'fitnessGoal',
+  streakDays: 'streakDays',
+  lastWorkoutAt: 'lastWorkoutAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.WorkoutLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exerciseId: 'exerciseId',
+  loggedAt: 'loggedAt',
+  notes: 'notes'
+};
+
+exports.Prisma.WorkoutSetScalarFieldEnum = {
+  id: 'id',
+  workoutLogId: 'workoutLogId',
+  setNumber: 'setNumber',
+  weightKg: 'weightKg',
+  reps: 'reps',
+  rpe: 'rpe'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -280,7 +320,10 @@ exports.Prisma.ModelName = {
   Exercise: 'Exercise',
   Article: 'Article',
   AuditLog: 'AuditLog',
-  ApiKey: 'ApiKey'
+  ApiKey: 'ApiKey',
+  UserProfile: 'UserProfile',
+  WorkoutLog: 'WorkoutLog',
+  WorkoutSet: 'WorkoutSet'
 };
 
 /**

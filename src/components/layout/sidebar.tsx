@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -7,11 +8,10 @@ import {
   Users,
   Dumbbell,
   BarChart3,
-  Settings,
-  BookOpenText,
   ShieldCheck,
   User,
   X,
+  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +37,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "trainer", "user"],
     exact: true,
   },
+  {
+    href: "/workouts",
+    label: "Workouts",
+    icon: Dumbbell,
+    roles: ["admin", "trainer", "user"],
+  },
   { href: "/admin", label: "Overview", icon: BarChart3, roles: ["admin"], exact: true },
   { href: "/admin/users", label: "User Management", icon: Users, roles: ["admin"] },
-  { href: "/admin/content", label: "Content Management", icon: Dumbbell, roles: ["admin", "trainer"] },
+  { href: "/admin/content", label: "Content Management", icon: Flame, roles: ["admin", "trainer"] },
   { href: "/admin/reports", label: "Reports & Analytics", icon: BarChart3, roles: ["admin", "trainer"] },
   { href: "/settings", label: "Roles & Permissions", icon: ShieldCheck, roles: ["admin"] },
   { href: "/profile", label: "Profile", icon: User, roles: ["admin", "trainer", "user"] },
@@ -47,45 +53,53 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Sidebar({ role, open, onClose }: SidebarProps) {
   const pathname = usePathname();
-
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
 
   return (
     <>
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform lg:static lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-sidebar text-sidebar-foreground transition-all duration-300 lg:static lg:translate-x-0",
+          open ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Dumbbell className="h-4.5 w-4.5 h-5 w-5 text-white" />
+        {/* Logo Header */}
+        <div className="flex h-16 items-center justify-between border-b border-border px-5">
+          <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30">
+              <Dumbbell className="h-5 w-5 text-primary" />
             </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold text-white">SmartFitness</p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400">Admin Suite</p>
+              <p
+                className="text-sm font-bold text-foreground tracking-wide"
+                style={{ fontFamily: "var(--font-outfit)" }}
+              >
+                SmartFitness
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                Platform
+              </p>
             </div>
           </Link>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white lg:hidden"
+            className="rounded-xl p-1.5 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground lg:hidden transition-colors"
             aria-label="Close menu"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            Main menu
+        {/* Navigation Items */}
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+          <p className="px-3 pb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Navigation
           </p>
           {items.map((item) => {
             const active = item.exact
@@ -98,32 +112,35 @@ export function Sidebar({ role, open, onClose }: SidebarProps) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-slate-400 hover:bg-sidebar-accent hover:text-white"
+                    ? "bg-primary/15 text-primary shadow-sm font-semibold border border-primary/25"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    active ? "text-primary" : "group-hover:text-foreground"
+                  )}
+                />
                 {item.label}
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-4">
-          <div className="rounded-lg bg-sidebar-accent p-3">
-            <p className="text-xs font-medium text-white">Need the API?</p>
-            <p className="mt-1 text-xs text-slate-400">
-              Full REST documentation with Swagger.
-            </p>
-            <Link
-              href="/api-docs"
-              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300"
-            >
-              <BookOpenText className="h-3.5 w-3.5" />
-              Open API docs
-            </Link>
+        {/* User Role Indicator */}
+        <div className="border-t border-border p-4">
+          <div className="rounded-2xl bg-card border border-border p-3.5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-foreground capitalize">{role} Account</p>
+              <p className="text-[10px] text-muted-foreground">SmartFitness System</p>
+            </div>
+            <span className="h-2 w-2 rounded-full bg-emerald-500" title="Connected" />
           </div>
         </div>
       </aside>

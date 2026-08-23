@@ -3,236 +3,495 @@ import {
   ArrowRight,
   BarChart3,
   Dumbbell,
-  KeyRound,
-  LayoutDashboard,
   ShieldCheck,
   Users,
-  BookOpenText,
   Zap,
+  Activity,
+  Target,
+  TrendingUp,
+  CheckCircle2,
+  Star,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const FEATURES = [
   {
-    icon: LayoutDashboard,
-    title: "Admin Dashboard",
-    description: "Site-wide KPIs, live session counts, growth charts and role distribution at a glance.",
+    icon: Activity,
+    title: "Real-time Progress Tracking",
+    description:
+      "Log every set, rep and weight. Watch your volume, strength and body composition trend upward over time with live analytics.",
+    accent: "#84cc16",
   },
   {
     icon: Users,
     title: "User Management",
-    description: "Search, filter, sort, change roles and suspend members from a single data table.",
+    description:
+      "Search, filter, sort and manage all members from a single admin panel. Change roles and suspend accounts instantly.",
+    accent: "#06b6d4",
   },
   {
     icon: Dumbbell,
-    title: "Content Management",
-    description: "Add and edit exercises and articles from the admin panel — no hardcoding required.",
+    title: "Exercise Library",
+    description:
+      "12+ real exercises with step-by-step instructions, muscle diagrams and equipment requirements. Admin-editable.",
+    accent: "#a855f7",
   },
   {
     icon: ShieldCheck,
-    title: "Role-Based Access",
-    description: "Admin, Trainer and User roles enforced with JWT sessions and fine-grained permissions.",
+    title: "Role-Based Access Control",
+    description:
+      "Admin, Trainer and User roles enforced with session-based auth and fine-grained permission guards.",
+    accent: "#f59e0b",
   },
   {
-    icon: KeyRound,
-    title: "Secure REST API",
-    description: "Full CRUD endpoints with validation, rate limiting, audit logging and Swagger docs.",
+    icon: TrendingUp,
+    title: "BMR & TDEE Calculator",
+    description:
+      "Real Mifflin-St Jeor equations calculate your daily calorie goal based on your age, weight, height and activity level.",
+    accent: "#ec4899",
   },
   {
-    icon: BookOpenText,
-    title: "Swagger Documentation",
-    description: "Interactive OpenAPI docs embedded at /api-docs to explore every endpoint live.",
+    icon: BarChart3,
+    title: "Analytics Dashboard",
+    description:
+      "Admin-level charts for user growth, active sessions, role distribution and audit log activity.",
+    accent: "#06b6d4",
   },
 ];
 
 const KPIS = [
-  { label: "Total Users", value: "10k+", icon: Users },
-  { label: "Active Sessions", value: "1.2k", icon: Zap },
-  { label: "Exercises", value: "500+", icon: Dumbbell },
-  { label: "API Requests / min", value: "8k", icon: BarChart3 },
+  { label: "Exercises", value: "12+", suffix: "", icon: Dumbbell },
+  { label: "Muscle Groups", value: "8", suffix: "", icon: Target },
+  { label: "Active Members", value: "1.2k", suffix: "", icon: Users },
+  { label: "Workouts Tracked", value: "10k", suffix: "+", icon: Zap },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const exercises = await prisma.exercise.findMany({
+    where: { isPublished: true },
+    take: 6,
+    orderBy: { createdAt: "asc" },
+  });
+
+  const difficultyColor: Record<string, string> = {
+    beginner: "#22c55e",
+    intermediate: "#f59e0b",
+    advanced: "#ef4444",
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
+      {/* ── Navbar ─────────────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl border-b border-border bg-background/85">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <Dumbbell className="h-4 w-4 text-white" />
+          <Link href="/" className="flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 shadow-sm"
+            >
+              <Dumbbell className="h-5 w-5 text-primary" />
             </div>
-            <span className="text-lg font-semibold tracking-tight text-slate-900">SmartFitness</span>
+            <span
+              className="text-lg font-bold tracking-wide text-foreground"
+              style={{ fontFamily: "var(--font-outfit)" }}
+            >
+              SmartFitness
+            </span>
           </Link>
-          <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 sm:flex">
-            <a href="#features" className="hover:text-slate-900">Features</a>
-            <a href="#platform" className="hover:text-slate-900">Platform</a>
-            <a href="/api-docs" className="hover:text-slate-900">API Docs</a>
+
+          <div className="hidden items-center gap-8 text-sm font-medium text-muted-foreground sm:flex">
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#exercises" className="hover:text-foreground transition-colors">Exercises</a>
+            <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Sign in</Button>
+
+          <div className="flex items-center gap-3">
+            {/* Theme switcher in navbar */}
+            <ThemeToggle />
+
+            <Link
+              href="/login"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            >
+              Sign in
             </Link>
-            <Link href="/register">
-              <Button size="sm">Get started <ArrowRight className="h-3.5 w-3.5" /></Button>
+            <Link
+              href="/register"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition-all bg-primary text-primary-foreground shadow-sm hover:opacity-90"
+            >
+              Get started →
             </Link>
           </div>
         </div>
       </nav>
 
       <main>
-        <section className="border-b bg-gradient-to-b from-blue-50/60 to-white">
-          <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 sm:py-28">
-            <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+        {/* ── Hero ───────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden">
+          {/* Background decoration */}
+          <div
+            className="absolute inset-0 opacity-20 pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 25% 25%, rgba(132,204,22,0.15) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(6,182,212,0.15) 0%, transparent 50%)",
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              backgroundImage:
+                "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
+              backgroundSize: "60px 60px",
+              color: "var(--color-border)",
+            }}
+          />
+
+          <div className="relative mx-auto max-w-7xl px-4 py-28 text-center sm:px-6 sm:py-36">
+            {/* Live Badge */}
+            <div
+              className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold bg-primary/10 border border-primary/30 text-primary"
+            >
               <Zap className="h-3.5 w-3.5" />
-              Enterprise-grade fitness management
+              Smart Fitness Platform · Live System
+              <Star className="h-3.5 w-3.5" />
             </div>
-            <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
-              Manage your fitness platform like a{" "}
-              <span className="text-blue-600">pro</span>
+
+            {/* Headline */}
+            <h1
+              className="mx-auto max-w-4xl text-5xl font-black tracking-tight sm:text-7xl text-foreground"
+              style={{ fontFamily: "var(--font-outfit)", lineHeight: 1.1 }}
+            >
+              Train smarter,{" "}
+              <span className="gradient-text">track everything.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
-              One dashboard for users, exercises, articles and analytics — backed by a secure,
-              documented REST API with role-based access control.
+
+            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              One platform to log workouts, calculate your exact metabolic calorie goals, analyse body trends, and manage fitness members seamlessly.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/register">
-                <Button size="lg">Start free trial <ArrowRight className="h-4 w-4" /></Button>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/register"
+                id="hero-cta-start"
+                className="group flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-bold transition-all duration-200 bg-primary text-primary-foreground shadow-md hover:opacity-90"
+              >
+                Start Free
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link href="/api-docs">
-                <Button size="lg" variant="outline">Explore the API</Button>
-              </Link>
+              <a
+                href="#features"
+                id="hero-cta-explore"
+                className="flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold transition-all border border-border bg-card/60 text-foreground hover:bg-muted"
+              >
+                Explore Features
+              </a>
             </div>
-            <p className="mt-4 text-xs text-slate-400">
-              Try it: <span className="font-mono text-slate-500">admin@smartfitness.app</span> ·{" "}
-              <span className="font-mono text-slate-500">Admin@12345</span>
-            </p>
           </div>
         </section>
 
-        <section className="border-b bg-slate-50">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-12 sm:px-6 lg:grid-cols-4">
-            {KPIS.map((kpi) => (
-              <div key={kpi.label} className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600">
-                  <kpi.icon className="h-5 w-5 text-white" />
+        {/* ── KPI Strip ──────────────────────────────────────────────────── */}
+        <section className="border-y border-border bg-card/40">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-0 px-4 sm:px-6 lg:grid-cols-4">
+            {KPIS.map((kpi, i) => (
+              <div
+                key={kpi.label}
+                className="flex items-center gap-4 px-8 py-8 border-b sm:border-b-0 border-border"
+                style={{
+                  borderRight: i < KPIS.length - 1 ? "1px solid var(--color-border)" : "none",
+                }}
+              >
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary"
+                >
+                  <kpi.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{kpi.value}</p>
-                  <p className="text-sm text-slate-500">{kpi.label}</p>
+                  <p
+                    className="text-3xl font-black text-foreground"
+                    style={{ fontFamily: "var(--font-outfit)" }}
+                  >
+                    {kpi.value}
+                    <span className="text-primary">{kpi.suffix}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="features" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Everything your team needs
+        {/* ── Features ───────────────────────────────────────────────────── */}
+        <section id="features" className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3 text-primary">
+              Platform Features
+            </p>
+            <h2
+              className="text-4xl font-black tracking-tight sm:text-5xl text-foreground"
+              style={{ fontFamily: "var(--font-outfit)" }}
+            >
+              Everything you need to{" "}
+              <span className="gradient-text">perform</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-              Built with Next.js, Better Auth and Prisma — a complete frontend and backend in one codebase.
+            <p className="mx-auto mt-5 max-w-2xl text-muted-foreground">
+              Built with Next.js, Better Auth and Prisma — a high-performance system for both athletes and platform administrators.
             </p>
           </div>
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="group relative rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 border border-border bg-card shadow-sm hover:shadow-md"
               >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                  <feature.icon className="h-5 w-5 text-blue-600" />
+                <div
+                  className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300"
+                  style={{
+                    background: `${feature.accent}15`,
+                    border: `1px solid ${feature.accent}30`,
+                  }}
+                >
+                  <feature.icon className="h-5 w-5" style={{ color: feature.accent }} />
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{feature.description}</p>
+                <h3 className="mb-2 text-base font-semibold text-foreground">
+                  {feature.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="platform" className="border-t bg-slate-900">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-            <div className="grid items-center gap-12 lg:grid-cols-2">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wider text-blue-400">
-                  Platform
+        {/* ── Exercise Highlights Carousel ──────────────────────────────────────────── */}
+        {exercises.length > 0 && (
+          <section
+            id="exercises"
+            className="border-y border-border py-24 bg-card/20"
+          >
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+              <div className="text-center mb-16">
+                <p className="text-xs font-semibold uppercase tracking-widest mb-3 text-accent">
+                  Exercise Library
                 </p>
-                <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  A SaaS admin shell, ready to ship
+                <h2
+                  className="text-4xl font-black tracking-tight sm:text-5xl text-foreground"
+                  style={{ fontFamily: "var(--font-outfit)" }}
+                >
+                  Real exercises,{" "}
+                  <span className="text-accent">ready to log</span>
                 </h2>
-                <ul className="mt-8 space-y-4 text-slate-300">
-                  {[
-                    "Fixed sidebar navigation with icon set and role-aware menu",
-                    "Sortable, paginated data tables with search and filters",
-                    "KPI cards, growth line charts and role distribution charts",
-                    "Audit trail of every administrative action",
-                    "Deployment-ready .env handling and production guide",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600">
-                        <ArrowRight className="h-3 w-3 text-white" />
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
+                  Every exercise comes with step-by-step instructions, target muscle groups and equipment requirements.
+                </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-                  <span className="h-3 w-3 rounded-full bg-red-500/70" />
-                  <span className="h-3 w-3 rounded-full bg-amber-500/70" />
-                  <span className="h-3 w-3 rounded-full bg-green-500/70" />
-                  <span className="ml-2 text-xs text-slate-400">admin / dashboard</span>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {["Total users 12,458", "Active today 1,204", "New signups 342", "Sessions 2,891"].map(
-                    (stat) => (
-                      <div key={stat} className="rounded-lg bg-white/10 p-4">
-                        <p className="text-sm font-semibold text-white">{stat.split(" ")[0]}</p>
-                        <p className="text-lg font-bold text-blue-400">{stat.split(" ")[2]}</p>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {exercises.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="group rounded-2xl p-5 transition-all duration-200 hover:-translate-y-1 border border-border bg-card shadow-sm"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 border border-accent/20 text-accent"
+                      >
+                        <Dumbbell className="h-4 w-4" />
                       </div>
-                    )
-                  )}
+                      <span
+                        className="rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize"
+                        style={{
+                          backgroundColor: `${difficultyColor[ex.difficulty] ?? "#64748b"}15`,
+                          color: difficultyColor[ex.difficulty] ?? "#64748b",
+                          border: `1px solid ${difficultyColor[ex.difficulty] ?? "#64748b"}30`,
+                        }}
+                      >
+                        {ex.difficulty}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold mb-1 text-foreground">
+                      {ex.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                      {ex.description}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border"
+                      >
+                        {ex.muscleGroup}
+                      </span>
+                      <span
+                        className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border"
+                      >
+                        {ex.category}
+                      </span>
+                      {ex.equipment && (
+                        <span className="text-xs text-muted-foreground">
+                          {ex.equipment}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 text-center">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all border border-accent/30 text-accent bg-accent/5 hover:bg-accent/15"
+                >
+                  Log in to start tracking →
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Platform Section ───────────────────────────────────────────── */}
+        <section id="platform" className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+          <div className="grid items-center gap-16 lg:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4 text-primary">
+                Built to scale
+              </p>
+              <h2
+                className="text-4xl font-black tracking-tight sm:text-5xl mb-6 text-foreground"
+                style={{ fontFamily: "var(--font-outfit)" }}
+              >
+                A complete SaaS shell,{" "}
+                <span className="text-primary">ready to ship</span>
+              </h2>
+              <ul className="space-y-4">
+                {[
+                  "Fixed sidebar with role-aware navigation and active states",
+                  "Sortable, paginated admin data tables with search & filters",
+                  "KPI cards, growth line charts and role distribution charts",
+                  "Audit trail of every administrative action",
+                  "Mifflin-St Jeor BMR and TDEE calculations for nutrition goals",
+                  "Multi-theme dark and light mode support across all screens",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-primary" />
+                    <span className="text-sm text-muted-foreground">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Mock dashboard card */}
+            <div
+              className="rounded-2xl p-6 border border-border bg-card shadow-lg"
+            >
+              <div className="flex items-center gap-2 border-b border-border pb-4 mb-5">
+                <span className="h-3 w-3 rounded-full bg-red-500" />
+                <span className="h-3 w-3 rounded-full bg-amber-500" />
+                <span className="h-3 w-3 rounded-full bg-emerald-500" />
+                <span className="ml-3 text-xs text-muted-foreground font-mono">dashboard / overview</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[
+                  { label: "Total Workouts", value: "284", color: "#84cc16" },
+                  { label: "Streak Days", value: "12", color: "#06b6d4" },
+                  { label: "Daily Calories", value: "2,450", color: "#a855f7" },
+                  { label: "Volume (kg)", value: "18.4k", color: "#f59e0b" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl p-4 border border-border bg-muted/40"
+                  >
+                    <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>
+                    <p
+                      className="text-xl font-black"
+                      style={{ fontFamily: "var(--font-outfit)", color: stat.color }}
+                    >
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div
+                className="rounded-xl p-4 border border-primary/20 bg-primary/5"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-muted-foreground">Volume trend</p>
+                  <span className="text-xs font-semibold text-primary">↑ 12%</span>
+                </div>
+                <div className="flex items-end gap-1 h-12">
+                  {[40, 55, 45, 70, 60, 80, 75, 90, 85, 95, 88, 100].map((h, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 rounded-t"
+                      style={{
+                        height: `${h}%`,
+                        backgroundColor: i >= 9 ? "var(--color-primary)" : "rgba(132,204,22,0.3)",
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            Ready to take control?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-slate-600">
-            Create an account and explore the user dashboard, or sign in with the seeded admin to
-            see the full management suite.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/register">
-              <Button size="lg">Create account</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline">Sign in</Button>
-            </Link>
+        {/* ── CTA ─────────────────────────────────────────────────────────── */}
+        <section className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6">
+          <div
+            className="rounded-3xl px-8 py-20 border border-primary/25 bg-card shadow-lg"
+          >
+            <h2
+              className="text-4xl font-black tracking-tight sm:text-5xl mb-5 text-foreground"
+              style={{ fontFamily: "var(--font-outfit)" }}
+            >
+              Ready to hit your goals?
+            </h2>
+            <p className="mx-auto max-w-xl text-muted-foreground mb-10">
+              Create a free account and start logging workouts today with real-time biometric tracking.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link
+                href="/register"
+                className="rounded-xl px-8 py-3.5 text-sm font-bold transition-all bg-primary text-primary-foreground shadow-md hover:opacity-90"
+              >
+                Create free account
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-xl px-8 py-3.5 text-sm font-semibold transition-all border border-border bg-muted/60 text-foreground hover:bg-muted"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t bg-slate-50">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-600">
-              <Dumbbell className="h-3 w-3 text-white" />
+      {/* ── Footer ─────────────────────────────────────────────────────────── */}
+      <footer className="border-t border-border py-10 bg-card/30">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30"
+            >
+              <Dumbbell className="h-3.5 w-3.5 text-primary" />
             </div>
-            <span className="text-sm font-semibold text-slate-900">SmartFitness</span>
+            <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "var(--font-outfit)" }}>
+              SmartFitness
+            </span>
+            <span
+              className="rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+            >
+              ● Live
+            </span>
           </div>
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} SmartFitness. Assignment 5 — Smart Fitness Management System.
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} SmartFitness — Smart Fitness Management System
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <Link href="/api-docs" className="hover:text-slate-900">API Docs</Link>
-            <Link href="/login" className="hover:text-slate-900">Login</Link>
-            <Link href="/register" className="hover:text-slate-900">Register</Link>
+          <div className="flex items-center gap-5 text-xs text-muted-foreground">
+            <Link href="/login" className="hover:text-foreground transition-colors">Login</Link>
+            <Link href="/register" className="hover:text-foreground transition-colors">Register</Link>
           </div>
         </div>
       </footer>

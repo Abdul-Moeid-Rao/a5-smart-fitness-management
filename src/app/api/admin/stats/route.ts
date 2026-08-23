@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, handleApiError } from "@/lib/api";
 import { requirePermission } from "@/lib/rbac";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     await requirePermission("users.read");
 
@@ -11,28 +11,45 @@ export async function GET(request: Request) {
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [totalUsers, activeToday, newSignups, sessions, suspendedUsers] = await Promise.all([
+    const [
+      totalUsers,
+      activeToday,
+      newSignups,
+      sessions,
+      suspendedUsers,
+      adminUsers,
+      exercises,
+      articles,
+      apiKeys,
+      auditLogs,
+      activeLogsToday,
+      allSets,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { status: "active", lastLoginAt: { gte: todayStart } } }),
       prisma.user.count({ where: { createdAt: { gte: weekStart } } }),
       prisma.session.count({ where: { expiresAt: { gt: now } } }),
       prisma.user.count({ where: { status: "suspended" } }),
-    ]);
-
-    const [exercises, articles, apiKeys, auditLogs] = await Promise.all([
+      prisma.user.count({ where: { role: "admin" } }),
       prisma.exercise.count(),
       prisma.article.count({ where: { status: "published" } }),
       prisma.apiKey.count({ where: { status: "active" } }),
       prisma.auditLog.count(),
+      prisma.workoutLog.count({ where: { loggedAt: { gte: todayStart } } }),
+      prisma.workoutSet.findMany({ select: { weightKg: true, reps: true } }),
     ]);
+
+    const globalVolumeLifted = allSets.reduce(
+      (sum, s) => sum + (s.weightKg ?? 0) * (s.reps ?? 0),
+      0
+    );
 
     const roleCounts = await prisma.user.groupBy({ by: ["role"], _count: { _all: true } });
 
     const last30Days = Array.from({ length: 30 }, (_, i) => {
       const day = new Date(now.getTime() - (29 - i) * 24 * 60 * 60 * 1000);
       const start = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-      return { start, end };
+      return { start };
     });
 
     const signupsByDay = await prisma.user.groupBy({
@@ -99,10 +116,13 @@ export async function GET(request: Request) {
         newSignups,
         sessions,
         suspendedUsers,
+        adminUsers,
         exercises,
         articles,
         apiKeys,
         auditLogs,
+        activeLogsToday,
+        globalVolumeLifted: Math.round(globalVolumeLifted),
       },
       roleDistribution: roleCounts.map((r) => ({
         role: r.role,

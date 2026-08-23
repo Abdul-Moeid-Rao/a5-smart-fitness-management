@@ -59,6 +59,15 @@ async function main() {
       role: "admin",
       plan: "elite",
       bio: "Platform administrator",
+      profile: {
+        age: 30,
+        heightCm: 180,
+        weightKg: 82,
+        goalWeightKg: 80,
+        activityLevel: "active",
+        fitnessGoal: "maintain",
+        streakDays: 14,
+      },
     },
     {
       name: "Coach Sarah",
@@ -67,6 +76,15 @@ async function main() {
       role: "trainer",
       plan: "pro",
       bio: "Strength & conditioning coach",
+      profile: {
+        age: 28,
+        heightCm: 168,
+        weightKg: 62,
+        goalWeightKg: 60,
+        activityLevel: "very_active",
+        fitnessGoal: "maintain",
+        streakDays: 21,
+      },
     },
     {
       name: "Alex Johnson",
@@ -74,11 +92,19 @@ async function main() {
       password: "User@12345",
       role: "user",
       plan: "pro",
-      bio: "Fitness enthusiast training for a half-marathon",
+      bio: "Fitness enthusiast training for strength & hypertrophy",
+      profile: {
+        age: 26,
+        heightCm: 178,
+        weightKg: 76,
+        goalWeightKg: 73,
+        activityLevel: "moderate",
+        fitnessGoal: "lose",
+        streakDays: 5,
+      },
     },
   ];
 
-  const createdUserIds: string[] = [];
   for (const u of users) {
     const existing = await prisma.user.findUnique({ where: { email: u.email } });
     if (!existing) {
@@ -89,10 +115,6 @@ async function main() {
       } catch (error) {
         console.warn(`  ⚠ Could not register ${u.email}: ${String(error).slice(0, 120)}`);
       }
-      const user = await prisma.user.findUnique({ where: { email: u.email } });
-      if (user) createdUserIds.push(user.id);
-    } else {
-      createdUserIds.push(existing.id);
     }
   }
 
@@ -102,18 +124,33 @@ async function main() {
   });
 
   for (const u of users) {
-    await prisma.user.updateMany({
-      where: { email: u.email },
-      data: {
-        role: u.role,
-        plan: u.plan,
-        bio: u.bio,
-        status: "active",
-        lastLoginAt: new Date(now.getTime() - Math.random() * 48 * 60 * 60 * 1000),
-      },
-    });
+    const dbUser = await prisma.user.findUnique({ where: { email: u.email } });
+    if (dbUser) {
+      await prisma.user.update({
+        where: { id: dbUser.id },
+        data: {
+          role: u.role,
+          plan: u.plan,
+          bio: u.bio,
+          status: "active",
+          lastLoginAt: new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      // Upsert UserProfile
+      await prisma.userProfile.upsert({
+        where: { userId: dbUser.id },
+        update: {
+          ...u.profile,
+        },
+        create: {
+          userId: dbUser.id,
+          ...u.profile,
+        },
+      });
+    }
   }
-  console.log("  ✓ Users (admin@smartfitness.app / Admin@12345)");
+  console.log("  ✓ Users & UserProfiles (admin@smartfitness.app / Admin@12345)");
 
   const exercises = [
     {
@@ -271,6 +308,76 @@ async function main() {
   }
   console.log("  ✓ Exercises");
 
+  // Seed sample WorkoutLogs for Alex Johnson
+  const alex = await prisma.user.findUnique({ where: { email: "user@smartfitness.app" } });
+  const bench = await prisma.exercise.findUnique({ where: { slug: "barbell-bench-press" } });
+  const squat = await prisma.exercise.findUnique({ where: { slug: "back-squat" } });
+  const deadlift = await prisma.exercise.findUnique({ where: { slug: "conventional-deadlift" } });
+  const pullup = await prisma.exercise.findUnique({ where: { slug: "pull-up" } });
+
+  if (alex && bench && squat && deadlift && pullup) {
+    const existingCount = await prisma.workoutLog.count({ where: { userId: alex.id } });
+    if (existingCount === 0) {
+      const sampleWorkouts = [
+        {
+          exerciseId: bench.id,
+          loggedAt: new Date(now.getTime() - 1 * 86400000),
+          notes: "Solid pushing session, feeling strong on lockout",
+          sets: [
+            { setNumber: 1, weightKg: 70, reps: 10, rpe: 7.5 },
+            { setNumber: 2, weightKg: 75, reps: 8, rpe: 8 },
+            { setNumber: 3, weightKg: 80, reps: 6, rpe: 9 },
+          ],
+        },
+        {
+          exerciseId: squat.id,
+          loggedAt: new Date(now.getTime() - 2 * 86400000),
+          notes: "Deep squat depth achieved, knees tracked well",
+          sets: [
+            { setNumber: 1, weightKg: 90, reps: 8, rpe: 7 },
+            { setNumber: 2, weightKg: 100, reps: 6, rpe: 8.5 },
+            { setNumber: 3, weightKg: 105, reps: 5, rpe: 9 },
+          ],
+        },
+        {
+          exerciseId: deadlift.id,
+          loggedAt: new Date(now.getTime() - 3 * 86400000),
+          notes: "Heavy pull day, good posterior chain activation",
+          sets: [
+            { setNumber: 1, weightKg: 120, reps: 5, rpe: 8 },
+            { setNumber: 2, weightKg: 130, reps: 4, rpe: 8.5 },
+            { setNumber: 3, weightKg: 140, reps: 3, rpe: 9.5 },
+          ],
+        },
+        {
+          exerciseId: pullup.id,
+          loggedAt: new Date(now.getTime() - 4 * 86400000),
+          notes: "Strict bodyweight form with full range of motion",
+          sets: [
+            { setNumber: 1, weightKg: 0, reps: 12, rpe: 8 },
+            { setNumber: 2, weightKg: 0, reps: 10, rpe: 8.5 },
+            { setNumber: 3, weightKg: 0, reps: 8, rpe: 9 },
+          ],
+        },
+      ];
+
+      for (const w of sampleWorkouts) {
+        await prisma.workoutLog.create({
+          data: {
+            userId: alex.id,
+            exerciseId: w.exerciseId,
+            loggedAt: w.loggedAt,
+            notes: w.notes,
+            sets: {
+              create: w.sets,
+            },
+          },
+        });
+      }
+      console.log("  ✓ Sample Workout Logs & Sets");
+    }
+  }
+
   const articles = [
     {
       title: "Programming for Hypertrophy: The Complete Guide",
@@ -345,7 +452,9 @@ async function main() {
 
   const counts = {
     users: await prisma.user.count(),
+    profiles: await prisma.userProfile.count(),
     exercises: await prisma.exercise.count(),
+    workoutLogs: await prisma.workoutLog.count(),
     articles: await prisma.article.count(),
     roles: await prisma.role.count(),
     permissions: await prisma.permission.count(),
