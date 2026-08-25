@@ -85,14 +85,14 @@ export default async function LandingPage() {
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl border-b border-border bg-background/85">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 shadow-sm"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 shadow-sm"
             >
-              <Dumbbell className="h-5 w-5 text-primary" />
+              <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
             <span
-              className="text-lg font-bold tracking-wide text-foreground"
+              className="text-base sm:text-lg font-bold tracking-wide text-foreground"
               style={{ fontFamily: "var(--font-outfit)" }}
             >
               SmartFitness
@@ -105,21 +105,22 @@ export default async function LandingPage() {
             <a href="#platform" className="hover:text-foreground transition-colors">Platform</a>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Theme switcher in navbar */}
             <ThemeToggle />
 
             <Link
               href="/login"
-              className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              className="rounded-xl px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all whitespace-nowrap"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="rounded-xl px-4 py-2 text-sm font-semibold transition-all bg-primary text-primary-foreground shadow-sm hover:opacity-90"
+              className="rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold transition-all bg-primary text-primary-foreground shadow-sm hover:opacity-90 whitespace-nowrap shrink-0"
             >
-              Get started →
+              <span className="sm:hidden">Start</span>
+              <span className="hidden sm:inline">Get started →</span>
             </Link>
           </div>
         </div>
@@ -158,11 +159,11 @@ export default async function LandingPage() {
 
             {/* Headline */}
             <h1
-              className="mx-auto max-w-4xl text-5xl font-black tracking-tight sm:text-7xl text-foreground"
+              className="mx-auto max-w-4xl text-4xl font-black tracking-tight sm:text-5xl md:text-7xl text-foreground"
               style={{ fontFamily: "var(--font-outfit)", lineHeight: 1.1 }}
             >
               Train smarter,{" "}
-              <span className="gradient-text">track everything.</span>
+              <span className="gradient-text block sm:inline">track everything.</span>
             </h1>
 
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -192,29 +193,30 @@ export default async function LandingPage() {
 
         {/* ── KPI Strip ──────────────────────────────────────────────────── */}
         <section className="border-y border-border bg-card/40">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-0 px-4 sm:px-6 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4 px-4 sm:px-6">
             {KPIS.map((kpi, i) => (
               <div
                 key={kpi.label}
-                className="flex items-center gap-4 px-8 py-8 border-b sm:border-b-0 border-border"
-                style={{
-                  borderRight: i < KPIS.length - 1 ? "1px solid var(--color-border)" : "none",
-                }}
+                className={`flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-3 sm:gap-4 py-6 sm:px-8 sm:py-8 border-border ${
+                  i === 0 ? "border-b border-r lg:border-b-0" : 
+                  i === 1 ? "border-b lg:border-r lg:border-b-0" : 
+                  i === 2 ? "border-r" : ""
+                }`}
               >
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary"
+                  className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary"
                 >
-                  <kpi.icon className="h-5 w-5" />
+                  <kpi.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
                   <p
-                    className="text-3xl font-black text-foreground"
+                    className="text-2xl sm:text-3xl font-black text-foreground"
                     style={{ fontFamily: "var(--font-outfit)" }}
                   >
                     {kpi.value}
                     <span className="text-primary">{kpi.suffix}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{kpi.label}</p>
                 </div>
               </div>
             ))}
